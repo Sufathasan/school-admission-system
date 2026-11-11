@@ -1,0 +1,50 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-schooladmission}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB:-schooladmission};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres}
+      HOLD_DURATION_SECONDS: ${HOLD_DURATION_SECONDS:-600}
+      EXPIRATION_POLLING_SECONDS: ${EXPIRATION_POLLING_SECONDS:-15}
+    ports:
+      - "${API_PORT:-5286}:8080"
+
+  frontend:
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:5286}
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+
+volumes:
+  postgres_data:

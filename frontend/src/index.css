@@ -1,0 +1,21 @@
+@import 'tailwindcss';
+
+:root {
+  font-family: Inter, system-ui, sans-serif;
+  color: #0f172a;
+  background: #f8fafc;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { min-height: 100%; }
+body {
+  margin: 0;
+}
+a { text-decoration: none; }
+button, input, select { font: inherit; }

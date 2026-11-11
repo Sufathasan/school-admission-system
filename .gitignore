@@ -1,0 +1,23 @@
+# Environment and local secrets
+.env
+.env.*
+!.env.example
+
+# .NET
+**/bin/
+**/obj/
+*.user
+*.suo
+
+# Node and frontend builds
+**/node_modules/
+**/dist/
+npm-debug.log*
+
+# IDE and OS files
+.vs/
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
