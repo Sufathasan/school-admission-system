@@ -222,7 +222,7 @@ function ApplicationFormPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [clock, setClock] = useState(Date.now());
+  const [clock, setClock] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -242,10 +242,12 @@ function ApplicationFormPage() {
     };
     void refresh();
     const refreshId = window.setInterval(() => void refresh(), 5000);
+    const initialClockId = window.setTimeout(() => setClock(Date.now()), 0);
     const clockId = window.setInterval(() => setClock(Date.now()), 1000);
     return () => {
       active = false;
       window.clearInterval(refreshId);
+      window.clearTimeout(initialClockId);
       window.clearInterval(clockId);
     };
   }, []);
@@ -375,7 +377,7 @@ function MyApplicationsPage() {
   const [applications, setApplications] = useState<ApplicationDetail[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [clock, setClock] = useState(Date.now());
+  const [clock, setClock] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -396,10 +398,12 @@ function MyApplicationsPage() {
     };
     void refresh();
     const refreshId = window.setInterval(() => void refresh(), 5000);
+    const initialClockId = window.setTimeout(() => setClock(Date.now()), 0);
     const clockId = window.setInterval(() => setClock(Date.now()), 1000);
     return () => {
       active = false;
       window.clearInterval(refreshId);
+      window.clearTimeout(initialClockId);
       window.clearInterval(clockId);
     };
   }, []);
@@ -477,7 +481,7 @@ function PaymentPage() {
   const [error, setError] = useState<string | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [clock, setClock] = useState(Date.now());
+  const [clock, setClock] = useState(0);
 
   useEffect(() => {
     if (!applicationId) return;
@@ -497,10 +501,12 @@ function PaymentPage() {
     };
     void refresh();
     const refreshId = window.setInterval(() => void refresh(), 5000);
+    const initialClockId = window.setTimeout(() => setClock(Date.now()), 0);
     const clockId = window.setInterval(() => setClock(Date.now()), 1000);
     return () => {
       active = false;
       window.clearInterval(refreshId);
+      window.clearTimeout(initialClockId);
       window.clearInterval(clockId);
     };
   }, [applicationId]);
@@ -550,6 +556,7 @@ function ApplicationStatusPage() {
   const { applicationId = '' } = useParams();
   const [application, setApplication] = useState<ApplicationDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [clock, setClock] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -566,9 +573,13 @@ function ApplicationStatusPage() {
     };
     void refresh();
     const intervalId = window.setInterval(() => void refresh(), 5000);
+    const initialClockId = window.setTimeout(() => setClock(Date.now()), 0);
+    const clockId = window.setInterval(() => setClock(Date.now()), 1000);
     return () => {
       active = false;
       window.clearInterval(intervalId);
+      window.clearTimeout(initialClockId);
+      window.clearInterval(clockId);
     };
   }, [applicationId]);
 
@@ -584,7 +595,7 @@ function ApplicationStatusPage() {
       <p>Status: <strong>{application.status}</strong></p>
       <p>Submitted: {formatDate(application.createdAtUtc)}</p>
       <p>Hold expires: {formatDate(application.holdExpiresAtUtc)}</p>
-      {application.status === 'Pending' && Date.parse(application.holdExpiresAtUtc) > Date.now() &&
+      {application.status === 'Pending' && Date.parse(application.holdExpiresAtUtc) > clock &&
         <Link className="inline-flex rounded-lg bg-sky-600 px-4 py-2 text-white" to={`/payment/${application.id}`}>Continue to payment</Link>}
     </section>
   );
@@ -744,13 +755,23 @@ function AdminDashboardPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="grid items-start gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
+      <aside className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:sticky lg:top-6">
+        <p className="px-3 pb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Administration</p>
+        <nav aria-label="Admin dashboard sections" className="flex gap-2 overflow-x-auto lg:flex-col">
+          <a href="#dashboard-overview" className="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">Overview</a>
+          <a href="#class-management" className="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">Classes and shifts</a>
+          <a href="#class-capacity" className="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">Seat capacity</a>
+          <a href="#application-management" className="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">Applications</a>
+        </nav>
+      </aside>
+      <div className="min-w-0 space-y-6">
       <h2 className="text-2xl font-semibold text-slate-900">Admin dashboard</h2>
       {error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
       {notice && <p role="status" className="rounded-lg bg-green-50 p-3 text-sm text-green-700">{notice}</p>}
       {loading && <p role="status">Loading dashboard data...</p>}
       {stats && (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div id="dashboard-overview" className="grid gap-4 scroll-mt-6 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard label="Total Classes" value={stats.totalClasses.toString()} />
           <StatCard label="Total Seats" value={stats.totalSeats.toString()} />
           <StatCard label="Held Seats" value={stats.heldSeats.toString()} />
@@ -761,7 +782,7 @@ function AdminDashboardPage() {
         </div>
       )}
 
-      <section className="grid gap-4 xl:grid-cols-2">
+      <section id="class-management" className="grid scroll-mt-6 gap-4 xl:grid-cols-2">
         <form onSubmit={(event) => void createClassWithShift(event)} className="space-y-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <h3 className="font-semibold">Create a class</h3>
           <input required minLength={2} maxLength={120} value={className} onChange={(event) => setClassName(event.target.value)} placeholder="Class name" className="w-full rounded-xl border border-slate-300 px-3 py-2" />
@@ -798,7 +819,7 @@ function AdminDashboardPage() {
         </form>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <section id="class-capacity" className="scroll-mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h3 className="mb-4 font-semibold">Class seat capacity</h3>
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm text-slate-700">
@@ -825,7 +846,7 @@ function AdminDashboardPage() {
         </div>
       </section>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div id="application-management" className="scroll-mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h3 className="font-semibold">Admission applications</h3>
         <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search student or registration number" className="rounded-xl border border-slate-300 px-3 py-2" />
@@ -878,6 +899,7 @@ function AdminDashboardPage() {
             </tbody>
           </table>
         </div>
+      </div>
       </div>
     </div>
   );
